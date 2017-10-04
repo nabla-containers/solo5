@@ -112,9 +112,6 @@ void ukvm_hv_vcpu_init(struct ukvm_hv *hv, ukvm_gpa_t gpa_ep,
     bi->mem_size = hv->mem_size;
     bi->kernel_end = gpa_kend;
     bi->cmdline = LINUX_CMDLINE_BASE;
-
-    /* XXX We should read this from /proc/cpuinfo */
-    //bi->cpu.tsc_freq = 8999450000;
     bi->cpu.tsc_freq =   get_cpuinfo_freq();
     
     uint64_t *hypercall_ptr = (uint64_t *)(hv->mem + LINUX_HYPERCALL_ADDRESS);

@@ -75,7 +75,6 @@ static inline void ukvm_do_hypercall(int n, volatile void *arg)
 #    ifdef assert
     assert(((uint64_t)arg <= UINT32_MAX));
 #    endif
-
     __asm__ __volatile__("outl %0, %1"
             :
             : "a" ((uint32_t)((uint64_t)arg)),
