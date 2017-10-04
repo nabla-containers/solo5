@@ -57,8 +57,17 @@ void ukvm_elf_load(const char *file, uint8_t *mem, size_t mem_size,
  * Check that (gpa) and (gpa + sz) are within guest memory. Returns a host-side
  * pointer to (gpa) if successful, aborts if not.
  */
-#define UKVM_CHECKED_GPA_P(hv, gpa, sz) \
+#ifdef __UKVM_LINUX__
+/* 
+ * If we are running as a linux process, we are sharing the address
+ * space (and even the stack) with ukvm, so these checks do not make
+ * sense.
+ */
+#define UKVM_CHECKED_GPA_P(hv, gpa, sz) (void *)gpa
+#else
+#define UKVM_CHECKED_GPA_P(hv, gpa, sz)                         \
     ukvm_checked_gpa_p((hv), (gpa), (sz), __FILE__, __LINE__)
+#endif
 
 inline void *ukvm_checked_gpa_p(struct ukvm_hv *hv, ukvm_gpa_t gpa, size_t sz,
         const char *file, int line)

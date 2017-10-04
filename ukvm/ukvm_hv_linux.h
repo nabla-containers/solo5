@@ -1,7 +1,7 @@
 /* 
  * Copyright (c) 2015-2017 Contributors as noted in the AUTHORS file
  *
- * This file is part of Solo5, a unikernel base layer.
+ * This file is part of ukvm, a unikernel monitor.
  *
  * Permission to use, copy, modify, and/or distribute this software
  * for any purpose with or without fee is hereby granted, provided
@@ -18,29 +18,27 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "kernel.h"
+/*
+ * ukvm_hv_linux.h: KVM backend definitions.
+ */
 
-void _start(void *arg)
-{
-    int ret;
-    char *cmdline;
+#ifndef UKVM_HV_LINUX_H
+#define UKVM_HV_LINUX_H
 
-    console_init();
-    //cpu_init();
-    platform_init(arg);
-    cmdline = cmdline_parse(platform_cmdline());
+#define LINUX_MAP_ADDRESS    0x10000
+#define LINUX_BOOT_INFO_BASE 0x10100
+#define LINUX_CMDLINE_BASE   0x10200
+/*
+ *           |--unmapped--|--|--|-------|
+ * hv->mem = 0            0x10000 = LINUX_HYPERCALL_ADDRESS
+ *                           0x10100 = LINUX_CMDLINE_BASE
+ *                              0x10200 = LINUX_CMDLINE_BASE
+ *                                      0x100000 = UNIKERNEL
+ */
+struct ukvm_hvb {
+    uint8_t *realmem; /* the guest memory allocation */
+    uint64_t entry;
+    void *arg;
+};
 
-    log(INFO, "            |      ___|\n");
-    log(INFO, "  __|  _ \\  |  _ \\ __ \\\n");
-    log(INFO, "\\__ \\ (   | | (   |  ) |\n");
-    log(INFO, "____/\\___/ _|\\___/____/\n");
-
-    mem_init();
-    time_init(arg);
-    net_init();
-
-    ret = solo5_app_main(cmdline);
-    log(DEBUG, "Solo5: solo5_app_main() returned with %d\n", ret);
-
-    platform_exit();
-}
+#endif /* UKVM_HV_KVM_H */
