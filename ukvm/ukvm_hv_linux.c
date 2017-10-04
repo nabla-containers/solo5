@@ -34,6 +34,9 @@
 #include <linux/kvm.h>
 #include <stdio.h>
 
+/* #include <sys/prctl.h> */
+/* #include <linux/seccomp.h> */
+
 #include "ukvm.h"
 #include "ukvm_hv_linux.h"
 
@@ -75,6 +78,32 @@ struct ukvm_hv *ukvm_hv_init(size_t mem_size)
 
 static void ukvm_hv_handle_exit(int nr, void *arg);
 
+/* Yikes. Using rdtsc for timing is a bit suspect. */
+uint64_t get_cpuinfo_freq(void)
+{
+    FILE *cpuinfo = fopen("/proc/cpuinfo", "rb");
+    int ghz=0, mhz=0;
+    char buf[256];
+    
+    do {
+        char *ptr;
+        ptr = fgets(buf, 256, cpuinfo);
+        if (!ptr)
+            continue;
+                
+        ptr = strstr(buf, "GHz");
+        if (!ptr)
+            continue;
+
+        sscanf(ptr - 4, "%d.%d", &ghz, &mhz);
+        break;
+    } while(!feof(cpuinfo));
+
+    fclose(cpuinfo);
+    return ((uint64_t)ghz * 1000000000 + (uint64_t)mhz * 10000000);
+}
+
+
 void ukvm_hv_vcpu_init(struct ukvm_hv *hv, ukvm_gpa_t gpa_ep,
                        ukvm_gpa_t gpa_kend, char **cmdline)
 {
@@ -85,8 +114,9 @@ void ukvm_hv_vcpu_init(struct ukvm_hv *hv, ukvm_gpa_t gpa_ep,
     bi->cmdline = LINUX_CMDLINE_BASE;
 
     /* XXX We should read this from /proc/cpuinfo */
-    bi->cpu.tsc_freq = 899945000;
-
+    //bi->cpu.tsc_freq = 8999450000;
+    bi->cpu.tsc_freq =   get_cpuinfo_freq();
+    
     uint64_t *hypercall_ptr = (uint64_t *)(hv->mem + LINUX_HYPERCALL_ADDRESS);
     *hypercall_ptr = (uint64_t)ukvm_hv_handle_exit;
     
@@ -107,6 +137,8 @@ void ukvm_hv_vcpu_loop(struct ukvm_hv *hv)
 {
     void (*_start)(void *) = (void (*)(void *))hv->b->entry;
     loop_hv = hv;
+
+    /* prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT); */
 
     /* 
      * First call into unikernel, call start.  Note we are sharing our
