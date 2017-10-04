@@ -19,18 +19,26 @@
  */
 
 /*
- * ukvm_hv_linux.h: KVM backend definitions.
+ * ukvm_hv_linux.h: Shared Linux process backend definitions.
  */
 
 #ifndef UKVM_HV_LINUX_H
 #define UKVM_HV_LINUX_H
 
-#define LINUX_MAP_ADDRESS    0x10000
-#define LINUX_BOOT_INFO_BASE 0x10100
-#define LINUX_CMDLINE_BASE   0x10200
+/* 
+ * Note: we currently need __UKVM_LINUX__ to be defined in
+ * ukvm_guest.h for this backend to be used
+ */
+
+#define LINUX_MAP_ADDRESS          0x10000
+/* #define LINUX_HYPERCALL_ADDRESS 0x10000 (defined in ukvm_guest.h) */
+#define LINUX_BOOT_INFO_BASE       0x10100
+#define LINUX_CMDLINE_BASE         0x10200
+
 /*
- *           |--unmapped--|--|--|-------|
- * hv->mem = 0            0x10000 = LINUX_HYPERCALL_ADDRESS
+ *                        0x10000 = LINUX_MAP_ADDRESS
+ *           |--unmapped--|--|--|-------|--unikernel....
+ * hv->mem = 0            0x10000 = LINUX_HYPERCALL_ADDRESS 
  *                           0x10100 = LINUX_CMDLINE_BASE
  *                              0x10200 = LINUX_CMDLINE_BASE
  *                                      0x100000 = UNIKERNEL
@@ -41,4 +49,4 @@ struct ukvm_hvb {
     void *arg;
 };
 
-#endif /* UKVM_HV_KVM_H */
+#endif /* UKVM_HV_LINUX_H */
