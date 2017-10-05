@@ -36,9 +36,6 @@
 
 /* for seccomp */
 #include "seccomp-bpf.h"
-#include "syscall-reporter.h"
-/* #include <sys/prctl.h> */
-/* #include <linux/seccomp.h> */
 
 #include "ukvm.h"
 #include "ukvm_hv_linux.h"
@@ -182,9 +179,7 @@ void ukvm_hv_vcpu_loop(struct ukvm_hv *hv)
     void (*_start)(void *) = (void (*)(void *))hv->b->entry;
     loop_hv = hv;
 
-    install_syscall_reporter();
     install_syscall_filter();
-    /* prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT); */
 
     /* 
      * First call into unikernel, call start.  Note we are sharing our
