@@ -34,14 +34,20 @@
 #include <linux/kvm.h>
 #include <stdio.h>
 
+/* for seccomp */
 #include <seccomp.h> /* from libseccomp-dev */
+#include "seccomp-bpf.h"
+#include "syscall-reporter.h"
+/* #include <sys/prctl.h> */
+/* #include <linux/seccomp.h> */
 
 #include "ukvm.h"
 #include "ukvm_hv_linux.h"
 
 void install_syscall_filter(void)
 {
-    scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL);
+    //scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL);
+    scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRAP);
 
     /* 
      * For core module.
@@ -63,12 +69,10 @@ void install_syscall_filter(void)
      * XXX move to block module so we can get the fd for pread/write.
      * Hardcoding 4 only worked some of the time.
      */
-    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(pwrite64), 0);
-    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(pread64), 0);
-    /* seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(pwrite64), 1, */
-    /*                  SCMP_A0(SCMP_CMP_EQ, 4)); */
-    /* seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(pread64), 1, */
-    /*                  SCMP_A0(SCMP_CMP_EQ, 4)); */
+     seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(pwrite64), 1, 
+                      SCMP_A0(SCMP_CMP_EQ, 4)); 
+     seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(pread64), 1, 
+                      SCMP_A0(SCMP_CMP_EQ, 4)); 
 
     /* 
      * For net module. 
@@ -184,7 +188,9 @@ void ukvm_hv_vcpu_loop(struct ukvm_hv *hv)
     void (*_start)(void *) = (void (*)(void *))hv->b->entry;
     loop_hv = hv;
 
+    install_syscall_reporter();
     install_syscall_filter();
+    /* prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT); */
 
     /* 
      * First call into unikernel, call start.  Note we are sharing our
