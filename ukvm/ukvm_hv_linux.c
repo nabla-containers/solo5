@@ -34,11 +34,58 @@
 #include <linux/kvm.h>
 #include <stdio.h>
 
+/* for seccomp */
+#include "seccomp-bpf.h"
+#include "syscall-reporter.h"
 /* #include <sys/prctl.h> */
 /* #include <linux/seccomp.h> */
 
 #include "ukvm.h"
 #include "ukvm_hv_linux.h"
+
+
+static int install_syscall_filter(void)
+{
+	struct sock_filter filter[] = {
+		/* Validate architecture. */
+		VALIDATE_ARCHITECTURE,
+		/* Grab the system call number. */
+		EXAMINE_SYSCALL,
+		/* Syscalls for hello, quiet, globals, fpu. */
+		ALLOW_SYSCALL(write),
+		ALLOW_SYSCALL(exit_group),
+        /* Additional syscalls for time. */
+        ALLOW_SYSCALL(ppoll),
+        /* Additional syscalls for blk. */
+        ALLOW_SYSCALL(pwrite64),
+        ALLOW_SYSCALL(pread64),
+        /* Additional syscalls for net. */
+        ALLOW_SYSCALL(read),
+		/* Add more syscalls here. */
+		KILL_PROCESS,
+	};
+	struct sock_fprog prog = {
+		.len = (unsigned short)(sizeof(filter)/sizeof(filter[0])),
+		.filter = filter,
+	};
+
+	if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
+		perror("prctl(NO_NEW_PRIVS)");
+		goto failed;
+	}
+	if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &prog)) {
+		perror("prctl(SECCOMP)");
+		goto failed;
+	}
+	return 0;
+
+failed:
+	if (errno == EINVAL)
+		fprintf(stderr, "SECCOMP_FILTER is not available. :(\n");
+	return 1;
+}
+
+
 
 struct ukvm_hv *ukvm_hv_init(size_t mem_size)
 {
@@ -135,6 +182,8 @@ void ukvm_hv_vcpu_loop(struct ukvm_hv *hv)
     void (*_start)(void *) = (void (*)(void *))hv->b->entry;
     loop_hv = hv;
 
+    install_syscall_reporter();
+    install_syscall_filter();
     /* prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT); */
 
     /* 
