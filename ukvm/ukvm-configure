@@ -68,6 +68,13 @@ add_header ()
     done
 }
 
+add_ldlib ()
+{
+    for i in "$@"; do
+        UKVM_LDLIBS="${UKVM_LDLIBS} ${i}"
+    done
+}
+
 add_module ()
 {
     if [ ! -f ${UKVM_SRC}/ukvm_module_$1.c ]; then
@@ -102,7 +109,8 @@ case ${TARGET} in
         #add_header ukvm_hv_kvm.h ukvm_cpu_x86_64.h
         add_cflags "-D__UKVM_LINUX__"
         add_obj ukvm_hv_linux.o
-        add_header ukvm_hv_linux.h seccomp-bpf.h
+        add_header ukvm_hv_linux.h
+        add_ldlib -lseccomp
         ;;
     x86_64-*freebsd1[12]*)
         add_obj ukvm_hv_freebsd.o ukvm_hv_freebsd_x86_64.o ukvm_cpu_x86_64.o

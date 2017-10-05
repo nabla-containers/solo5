@@ -34,54 +34,63 @@
 #include <linux/kvm.h>
 #include <stdio.h>
 
-/* for seccomp */
-#include "seccomp-bpf.h"
+#include <seccomp.h> /* from libseccomp-dev */
 
 #include "ukvm.h"
 #include "ukvm_hv_linux.h"
 
-
-static int install_syscall_filter(void)
+static void install_syscall_filter(void)
 {
-	struct sock_filter filter[] = {
-		/* Validate architecture. */
-		VALIDATE_ARCHITECTURE,
-		/* Grab the system call number. */
-		EXAMINE_SYSCALL,
-		/* Syscalls for hello, quiet, globals, fpu. */
-		ALLOW_SYSCALL(write),
-		ALLOW_SYSCALL(exit_group),
-        /* Additional syscalls for time. */
-        ALLOW_SYSCALL(ppoll),
-        /* Additional syscalls for blk. */
-        ALLOW_SYSCALL(pwrite64),
-        ALLOW_SYSCALL(pread64),
-        /* Additional syscalls for net. */
-        ALLOW_SYSCALL(read),
-		/* Add more syscalls here. */
-		KILL_PROCESS,
-	};
-	struct sock_fprog prog = {
-		.len = (unsigned short)(sizeof(filter)/sizeof(filter[0])),
-		.filter = filter,
-	};
+    scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL);
 
-	if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
-		perror("prctl(NO_NEW_PRIVS)");
-		goto failed;
-	}
-	if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &prog)) {
-		perror("prctl(SECCOMP)");
-		goto failed;
-	}
-	return 0;
+    /* 
+     * For core module.
+     *
+     * XXX move into core module so we can get the actual pollfd
+     * structure for poll.  Right now we can only say that the number
+     * of fds is 0.
+     *
+     */
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1,
+                     SCMP_A0(SCMP_CMP_EQ, 1));
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(exit_group), 0);
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(ppoll), 1,
+                     SCMP_A1(SCMP_CMP_EQ, 0));
 
-failed:
-	if (errno == EINVAL)
-		fprintf(stderr, "SECCOMP_FILTER is not available. :(\n");
-	return 1;
+    /* 
+     * For blk module.
+     *
+     * XXX move to block module so we can get the fd for pread/write.
+     * Hardcoding 4 only worked some of the time.
+     */
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(pwrite64), 0);
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(pread64), 0);
+    /* seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(pwrite64), 1, */
+    /*                  SCMP_A0(SCMP_CMP_EQ, 4)); */
+    /* seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(pread64), 1, */
+    /*                  SCMP_A0(SCMP_CMP_EQ, 4)); */
+
+    /* 
+     * For net module. 
+     *
+     *  XXX move to net module so we can get the fd for read/write,
+     *  but hardcoding 3 seems to be working for now.
+     *
+     *  I'm not sure how to get the right fd there for poll... we need
+     *  to point to the actual pollfd struct which will be in core,
+     *  not net.  For now, just saying that polling with nfds=1 is OK.
+     */
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(read), 2,
+                     SCMP_A0(SCMP_CMP_EQ, 3),
+                     SCMP_A2(SCMP_CMP_EQ, 1526));
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1,
+                     SCMP_A0(SCMP_CMP_EQ, 3));
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(ppoll), 1,
+                     SCMP_A1(SCMP_CMP_EQ, 1));
+
+    
+    seccomp_load(ctx);
 }
-
 
 
 struct ukvm_hv *ukvm_hv_init(size_t mem_size)
