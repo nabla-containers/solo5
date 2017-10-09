@@ -169,7 +169,13 @@ int main(int argc, char **argv)
 
     struct ukvm_hv *hv = ukvm_hv_init(mem_size);
 
+#ifdef __UKVM_LINUX__
+    /* The heap in ukvm kernels starts right after kernel_end. */
+    gpa_kend = (uint64_t)malloc(hv->mem_size);
+    ukvm_dynamic_load(elffile, &gpa_ep);
+#else
     ukvm_elf_load(elffile, hv->mem, hv->mem_size, &gpa_ep, &gpa_kend);
+#endif
 
     char *cmdline;
     ukvm_hv_vcpu_init(hv, gpa_ep, gpa_kend, &cmdline);

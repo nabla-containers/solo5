@@ -30,21 +30,7 @@
  * ukvm_guest.h for this backend to be used
  */
 
-#define LINUX_MAP_ADDRESS          0x10000
-/* #define LINUX_HYPERCALL_ADDRESS 0x10000 (defined in ukvm_guest.h) */
-#define LINUX_BOOT_INFO_BASE       0x10100
-#define LINUX_CMDLINE_BASE         0x10200
-
-/*
- *                        0x10000 = LINUX_MAP_ADDRESS
- *           |--unmapped--|--|--|-------|--unikernel....
- * hv->mem = 0            0x10000 = LINUX_HYPERCALL_ADDRESS 
- *                           0x10100 = LINUX_CMDLINE_BASE
- *                              0x10200 = LINUX_CMDLINE_BASE
- *                                      0x100000 = UNIKERNEL
- */
 struct ukvm_hvb {
-    uint8_t *realmem; /* the guest memory allocation */
     uint64_t entry;
     void *arg;
 };

@@ -38,6 +38,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <dlfcn.h>
 
 #include "ukvm.h"
 
@@ -224,4 +225,25 @@ out_error:
 
 out_invalid:
     errx(1, "%s: Exec format error", file);
+}
+
+
+void ukvm_dynamic_load(const char *file, ukvm_gpa_t *p_entry)
+{
+    void *lib_handle;
+    char *error;
+
+    /*
+     * file is not used the same way as in a regular open(). In dlopen(), file
+     * is only interpreted as a relative or absolute if it starts with /, ../,
+     * or ./. Otherwise, the name is looked for at /usr/lib, /lib, etc.
+     *
+     */
+    lib_handle = dlopen(file, RTLD_LAZY);
+    if (!lib_handle)
+        errx(1, dlerror());
+
+    *p_entry = (uint64_t)dlsym(lib_handle, "_start");
+    if ((error = dlerror()) != NULL)
+        errx(1, "%s", error);
 }

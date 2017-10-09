@@ -95,6 +95,7 @@ case $(uname -s) in
             BUILD_VIRTIO="no"
             BUILD_MUEN="no"
         fi
+        HOST_CFLAGS="${HOST_CFLAGS} -fPIC"
         ;;
     FreeBSD)
         # On FreeBSD/clang we use -nostdlibinc which gives us access to the

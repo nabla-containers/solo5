@@ -163,6 +163,21 @@ run_test ()
             (set -x; timeout 30s ${UKVM} -- ${UNIKERNEL} "$@")
             STATUS=$?
             ;;
+        *.so)
+            OS="$(uname -s)"
+            case ${OS} in
+                Linux)
+                    ;;
+                *)
+                    die "Don't know how to run ${NAME} on ${OS}"
+                    ;;
+            esac
+            UKVM=${TEST_DIR}/ukvm-bin
+            [ -n "${DISK}" ] && UKVM="${UKVM} --disk=${DISK}"
+            [ -n "${NET}" ] && UKVM="${UKVM} --net=${NET}"
+            (set -x; timeout 30s ${UKVM} -- ${UNIKERNEL} "$@")
+            STATUS=$?
+            ;;
         *.virtio)
             VIRTIO=${SCRIPT_DIR}/../tools/run/solo5-run-virtio.sh
             [ -n "${DISK}" ] && VIRTIO="${VIRTIO} -d ${DISK}"
@@ -263,14 +278,22 @@ eval $(grep -E ^BUILD_.+=.+ ${MAKECONF})
 #
 TESTS=
 if [ "${BUILD_UKVM}" = "yes" ]; then
-    add_test test_hello.ukvm//Hello_Solo5
-    add_test test_quiet.ukvm/-v/--solo5:quiet
-    add_test test_globals.ukvm
-    add_test test_exception.ukvm/-a
-    add_test test_fpu.ukvm
-    add_test test_time.ukvm
-    add_test test_blk.ukvm/-d
-    add_test test_ping_serve.ukvm/-n/limit
+    #add_test test_hello.ukvm//Hello_Solo5
+    #add_test test_quiet.ukvm/-v/--solo5:quiet
+    #add_test test_globals.ukvm
+    #add_test test_exception.ukvm/-a
+    #add_test test_fpu.ukvm
+    #add_test test_time.ukvm
+    #add_test test_blk.ukvm/-d
+    #add_test test_ping_serve.ukvm/-n/limit
+    add_test test_hello.so//Hello_Solo5
+    add_test test_quiet.so/-v/--solo5:quiet
+    add_test test_globals.so
+    add_test test_exception.so/-a
+    add_test test_fpu.so
+    add_test test_time.so
+    add_test test_blk.so/-d
+    add_test test_ping_serve.so/-n/limit
 fi
 if [ "${BUILD_VIRTIO}" = "yes" ]; then
     add_test test_hello.virtio//Hello_Solo5

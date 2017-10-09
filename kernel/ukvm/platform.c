@@ -22,6 +22,7 @@
 
 static const char *cmdline;
 static uint64_t mem_size;
+static uint64_t kernel_end;
 
 void process_bootinfo(void *arg)
 {
@@ -29,6 +30,13 @@ void process_bootinfo(void *arg)
 
     cmdline = bi->cmdline;
     mem_size = bi->mem_size;
+
+    /* TODO: check that in regular ukvm, _end matches kernel_end. */
+    kernel_end = bi->kernel_end;
+
+    /* This is just used on the hv_linux backend and it's harmless on the
+     * regular ukvm */
+    ukvm_linux_hypercall_ptr = bi->hypercall_ptr;
 }
 
 const char *platform_cmdline(void)
@@ -39,6 +47,11 @@ const char *platform_cmdline(void)
 uint64_t platform_mem_size(void)
 {
     return mem_size;
+}
+
+uint64_t platform_kernel_end(void)
+{
+    return kernel_end;
 }
 
 void platform_exit(void)

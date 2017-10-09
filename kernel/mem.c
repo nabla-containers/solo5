@@ -26,17 +26,18 @@ static uint64_t stack_guard_size;
 
 void mem_init(void)
 {
-    extern char _stext[], _etext[], _erodata[], _end[];
     uint64_t mem_size;
 
     mem_size = platform_mem_size();
-    heap_start = ((uint64_t)&_end + PAGE_SIZE - 1) & PAGE_MASK;
+    heap_start = (platform_kernel_end() + PAGE_SIZE - 1) & PAGE_MASK;
     heap_top = heap_start;
+
     /*
      * Cowardly refuse to run with less than 512KB of free memory.
      */
     if (heap_start + 0x80000 > mem_size)
 	PANIC("Not enough memory");
+
     /*
      * If we have <1MB of free memory then don't let the heap grow to more than
      * roughly half of free memory, otherwise don't let it grow to within 1MB
@@ -46,6 +47,8 @@ void mem_init(void)
     stack_guard_size = (mem_size - heap_start >= 0x100000) ?
 	0x100000 : ((mem_size - heap_start) / 2);
 
+#if 0
+    extern char _stext[], _etext[], _erodata[], _end[];
     log(INFO, "Solo5: Memory map: %lu MB addressable:\n", mem_size >> 20);
     log(INFO, "Solo5:     unused @ (0x0 - 0x%lx)\n", &_stext[-1]);
     log(INFO, "Solo5:       text @ (0x%lx - 0x%lx)\n", &_stext, &_etext[-1]);
@@ -53,6 +56,7 @@ void mem_init(void)
     log(INFO, "Solo5:       data @ (0x%lx - 0x%lx)\n", &_erodata, &_end[-1]);
     log(INFO, "Solo5:       heap >= 0x%lx < stack < 0x%lx\n", heap_start,
         mem_size);
+#endif
 }
 
 /*

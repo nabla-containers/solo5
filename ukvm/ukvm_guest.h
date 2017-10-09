@@ -49,7 +49,12 @@ struct ukvm_cpu_boot_info {
  */
 #define UKVM_HYPERCALL_PIO_BASE 0x500
 
-#define LINUX_HYPERCALL_ADDRESS 0x10000
+/*
+ * Unikernels running on hv_linux can call the exit handler function directly.
+ * This pointer holds the that address. This address is passed as an argument
+ * to the unikernel.
+ */
+uint64_t ukvm_linux_hypercall_ptr;
 
 #    ifdef UKVM_HOST
 /*
@@ -67,8 +72,7 @@ typedef uint64_t ukvm_gpa_t;
 static inline void ukvm_do_hypercall(int n, volatile void *arg)
 {
 #ifdef __UKVM_LINUX__
-    uint64_t hcaddr = *((uint64_t *)LINUX_HYPERCALL_ADDRESS);
-    void (*_hc)(int,void *) = (void (*)(int, void *))hcaddr;
+    void (*_hc)(int,void *) = (void (*)(int, void *))ukvm_linux_hypercall_ptr;
     _hc(n, (void *)arg);
 #else    
 
@@ -159,6 +163,7 @@ struct ukvm_boot_info {
     uint64_t kernel_end;                /* Address of end of kernel */
     UKVM_GUEST_PTR(char *) cmdline;     /* Address of command line (C string) */
     struct ukvm_cpu_boot_info cpu;      /* Arch-dependent part (see above) */
+    uint64_t hypercall_ptr;
 };
 /*
  * Maximum size of guest command line, including the string terminator.

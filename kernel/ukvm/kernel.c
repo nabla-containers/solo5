@@ -26,7 +26,7 @@ void _start(void *arg)
     char *cmdline;
 
     console_init();
-    //cpu_init();
+    //cpu_init(); // XXX: enable this for regular ukvm. Have a dummy version of this function for hv_linux
     platform_init(arg);
     cmdline = cmdline_parse(platform_cmdline());
 

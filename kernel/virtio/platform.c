@@ -97,6 +97,12 @@ uint64_t platform_mem_size(void)
     return mem_size;
 }
 
+uint64_t platform_kernel_end(void)
+{
+    extern char _end[];
+    return (uint64_t)&_end;
+}
+
 void platform_exit(void)
 {
     /*

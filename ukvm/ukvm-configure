@@ -78,9 +78,9 @@ add_module ()
     add_cflags "${enableit}"
 }
 
-UKVM_CFLAGS=
+UKVM_CFLAGS=-rdynamic
 UKVM_LDFLAGS=
-UKVM_LDLIBS=
+UKVM_LDLIBS=-ldl
 UKVM_HEADERS=
 UKVM_OBJS=
 add_obj ukvm_core.o ukvm_elf.o ukvm_main.o

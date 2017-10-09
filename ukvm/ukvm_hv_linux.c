@@ -51,24 +51,7 @@ struct ukvm_hv *ukvm_hv_init(size_t mem_size)
         err(1, "malloc");
     memset(hvb, 0, sizeof (struct ukvm_hvb));
 
-    hvb->realmem = mmap((void *)LINUX_MAP_ADDRESS,
-                        mem_size - LINUX_MAP_ADDRESS, PROT_READ | PROT_WRITE,
-                        MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    if (hvb->realmem == MAP_FAILED)
-        err(1, "Error allocating guest memory");
-
-    assert((uint64_t)hvb->realmem == LINUX_MAP_ADDRESS);
-
-    /*
-     * This is a bit of a nasty hack.
-     *
-     * hv->mem is at 0 so the unmodified unikernel ELF can be loaded
-     * assuming its addressing starts at 0 (as it does when running as
-     * a VM).  The unikernel doesn't use the really low memory (below
-     * LINUX_MAP_ADDRESS), so it ends up being OK that we don't
-     * actually allocate that.
-     */
-    hv->mem = 0; 
+    hv->mem = 0; /* Virtual addresses are the same in guest and here. */
     hv->mem_size = mem_size;
 
     hv->b = hvb;
@@ -103,24 +86,26 @@ uint64_t get_cpuinfo_freq(void)
     return ((uint64_t)ghz * 1000000000 + (uint64_t)mhz * 10000000);
 }
 
-
 void ukvm_hv_vcpu_init(struct ukvm_hv *hv, ukvm_gpa_t gpa_ep,
                        ukvm_gpa_t gpa_kend, char **cmdline)
 {
-    struct ukvm_boot_info *bi =
-        (struct ukvm_boot_info *)(hv->mem + LINUX_BOOT_INFO_BASE);
-    bi->mem_size = hv->mem_size;
+    struct ukvm_boot_info *bi = malloc(sizeof(struct ukvm_boot_info));
     bi->kernel_end = gpa_kend;
-    bi->cmdline = LINUX_CMDLINE_BASE;
+
+    /*
+     * In hv_linux, mem_size is interpreted as heap_size, and kend points to
+     * the start of the heap. bi->mem_size is used by the unikernel as the
+     * address of the last byte, not as actual size so we add kend+mem_size
+     * here.
+     */
+    bi->mem_size = gpa_kend + hv->mem_size;
+    bi->cmdline = (uint64_t)malloc(UKVM_CMDLINE_SIZE);
     bi->cpu.tsc_freq =   get_cpuinfo_freq();
-    
-    uint64_t *hypercall_ptr = (uint64_t *)(hv->mem + LINUX_HYPERCALL_ADDRESS);
-    *hypercall_ptr = (uint64_t)ukvm_hv_handle_exit;
-    
+    bi->hypercall_ptr = (uint64_t)ukvm_hv_handle_exit;
     hv->b->entry = gpa_ep;
     hv->b->arg = bi;
-        
-    *cmdline = (char *)(hv->mem + LINUX_CMDLINE_BASE);
+
+    *cmdline = (void *)bi->cmdline;
 }
 
 /* 

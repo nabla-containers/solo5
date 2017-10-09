@@ -16,7 +16,7 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
 # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-UKVM_TARGETS=test_globals.ukvm ukvm-bin
+UKVM_TARGETS=test_globals.ukvm test_globals.so ukvm-bin
 VIRTIO_TARGETS=test_globals.virtio
 MUEN_TARGETS=test_globals.muen
 UKVM_MODULES=
