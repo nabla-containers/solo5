@@ -126,7 +126,7 @@ virtio/solo5.o: $(VIRTIO_COBJS) virtio/solo5.lds
 	$(OBJCOPY) -w -G solo5_\* -G _start\* $@ $@
 
 ukvm/solo5.so: $(UKVM_LINUX_COBJS) ukvm/solo5.lds
-	$(LD) $(LDFLAGS) -fPIC -shared -o $@ $(UKVM_LINUX_COBJS)
+	$(LD) -r $(LDFLAGS) -o $@ $(UKVM_LINUX_COBJS)
 	$(OBJCOPY) -w -G solo5_\* -G _start\* $@ $@
 
 ukvm/solo5.o: $(UKVM_COBJS) ukvm/solo5.lds
