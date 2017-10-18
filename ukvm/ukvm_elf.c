@@ -241,7 +241,7 @@ void ukvm_dynamic_load(const char *file, ukvm_gpa_t *p_entry)
      */
     lib_handle = dlopen(file, RTLD_LAZY);
     if (!lib_handle)
-        errx(1, dlerror());
+        errx(1, "%s", dlerror());
 
     *p_entry = (uint64_t)dlsym(lib_handle, "_start");
     if ((error = dlerror()) != NULL)
