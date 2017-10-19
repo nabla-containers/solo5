@@ -18,7 +18,7 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "kernel.h"
+#include "../ukvm/kernel.h"
 
 void _start(void *arg)
 {
@@ -26,7 +26,6 @@ void _start(void *arg)
     char *cmdline;
 
     console_init();
-    cpu_init();
     platform_init(arg);
     cmdline = cmdline_parse(platform_cmdline());
 
@@ -36,7 +35,6 @@ void _start(void *arg)
     log(INFO, "____/\\___/ _|\\___/____/\n");
 
     mem_init();
-    time_init(arg);
     net_init();
 
     ret = solo5_app_main(cmdline);

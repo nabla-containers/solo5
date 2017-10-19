@@ -78,10 +78,11 @@ muen/muen-sinfo.o \
 $(COMMON_COBJS)
 
 # regular ukvm, minux platform_intr, cpu_${TARGET_ARCH} and cpu_vectors_${TARGET_ARCH}
-UKVM_LINUX_COBJS=\
-ukvm/kernel.o \
-ukvm/platform.o \
-ukvm/time.o \
+UNIX_COBJS=\
+unix/kernel.o \
+unix/time.o \
+unix/platform.o \
+unix/unix-mem.o \
 ukvm/platform_init.o \
 ukvm/poll.o \
 ukvm/tscclock.o \
@@ -91,7 +92,6 @@ ukvm/block.o \
 abort.o \
 ee_printf.o \
 lib.o \
-mem.o \
 malloc.o \
 exit.o \
 log.o \
@@ -100,12 +100,13 @@ cmdline.o
 HEADERS=\
 kernel.h
 
-all: virtio ukvm
+all: virtio ukvm unix
 
-.PHONY: virtio ukvm muen
+.PHONY: virtio ukvm muen unix
 virtio: virtio/solo5.o
-ukvm: ukvm/solo5.o ukvm/solo5.so
+ukvm: ukvm/solo5.o unix/solo5.o
 muen: muen/solo5.o
+unix: unix/solo5.o
 
 CFLAGS+=-D__SOLO5_KERNEL__
 
@@ -125,12 +126,12 @@ virtio/solo5.o: $(VIRTIO_COBJS) virtio/solo5.lds
 	$(LD) -r $(LDFLAGS) -o $@ $(VIRTIO_COBJS)
 	$(OBJCOPY) -w -G solo5_\* -G _start\* $@ $@
 
-ukvm/solo5.so: $(UKVM_LINUX_COBJS) ukvm/solo5.lds
-	$(LD) -r $(LDFLAGS) -o $@ $(UKVM_LINUX_COBJS)
-	$(OBJCOPY) -w -G solo5_\* -G _start\* $@ $@
-
 ukvm/solo5.o: $(UKVM_COBJS) ukvm/solo5.lds
 	$(LD) -r $(LDFLAGS) -o $@ $(UKVM_COBJS)
+	$(OBJCOPY) -w -G solo5_\* -G _start\* $@ $@
+
+unix/solo5.o: $(UNIX_COBJS)
+	$(LD) -r $(LDFLAGS) -o $@ $(UNIX_COBJS)
 	$(OBJCOPY) -w -G solo5_\* -G _start\* $@ $@
 
 muen/solo5.o: $(MUEN_COBJS) ukvm/solo5.lds

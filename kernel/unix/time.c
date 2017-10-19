@@ -20,27 +20,17 @@
 
 #include "kernel.h"
 
-void _start(void *arg)
+uint64_t solo5_clock_monotonic(void)
 {
-    int ret;
-    char *cmdline;
+    struct ukvm_walltime t;
+    ukvm_do_hypercall(UKVM_HYPERCALL_WALLTIME, &t);
+    return t.nsecs;
+}
 
-    console_init();
-    cpu_init();
-    platform_init(arg);
-    cmdline = cmdline_parse(platform_cmdline());
-
-    log(INFO, "            |      ___|\n");
-    log(INFO, "  __|  _ \\  |  _ \\ __ \\\n");
-    log(INFO, "\\__ \\ (   | | (   |  ) |\n");
-    log(INFO, "____/\\___/ _|\\___/____/\n");
-
-    mem_init();
-    time_init(arg);
-    net_init();
-
-    ret = solo5_app_main(cmdline);
-    log(DEBUG, "Solo5: solo5_app_main() returned with %d\n", ret);
-
-    platform_exit();
+/* return wall time in nsecs */
+uint64_t solo5_clock_wall(void)
+{
+    struct ukvm_walltime t;
+    ukvm_do_hypercall(UKVM_HYPERCALL_WALLTIME, &t);
+    return t.nsecs;
 }

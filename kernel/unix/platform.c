@@ -20,27 +20,44 @@
 
 #include "kernel.h"
 
-void _start(void *arg)
+static const char *cmdline;
+static uint64_t mem_size;
+static uint64_t kernel_end;
+
+void process_bootinfo(void *arg)
 {
-    int ret;
-    char *cmdline;
+    struct ukvm_boot_info *bi = arg;
 
-    console_init();
-    cpu_init();
-    platform_init(arg);
-    cmdline = cmdline_parse(platform_cmdline());
+    cmdline = bi->cmdline;
+    mem_size = bi->mem_size;
 
-    log(INFO, "            |      ___|\n");
-    log(INFO, "  __|  _ \\  |  _ \\ __ \\\n");
-    log(INFO, "\\__ \\ (   | | (   |  ) |\n");
-    log(INFO, "____/\\___/ _|\\___/____/\n");
+    kernel_end = bi->kernel_end;
 
-    mem_init();
-    time_init(arg);
-    net_init();
+    /* This is just used on the hv_linux backend and it's harmless on the
+     * regular ukvm */
+    ukvm_linux_hypercall_ptr = bi->hypercall_ptr;
+}
 
-    ret = solo5_app_main(cmdline);
-    log(DEBUG, "Solo5: solo5_app_main() returned with %d\n", ret);
+const char *platform_cmdline(void)
+{
+    return cmdline;
+}
 
-    platform_exit();
+uint64_t platform_mem_size(void)
+{
+    return mem_size;
+}
+
+uint64_t platform_kernel_end(void)
+{
+    return kernel_end;
+}
+
+void platform_exit(void)
+{
+    /*
+     * Halt will cause an exit (as in "shutdown") on ukvm.
+     */
+    ukvm_do_hypercall(UKVM_HYPERCALL_HALT, NULL);
+    for(;;);
 }
