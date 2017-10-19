@@ -109,7 +109,6 @@ int isspace(int c);
 void platform_init(void *arg);
 const char *platform_cmdline(void);
 uint64_t platform_mem_size(void);
-uint64_t platform_kernel_end(void);
 void platform_exit(void) __attribute__((noreturn));
 int platform_puts(const char *buf, int n);
 

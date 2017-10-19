@@ -22,30 +22,22 @@
 
 static uint64_t heap_start;
 static uint64_t heap_top;
-static uint64_t stack_guard_size;
+static uint64_t heap_max;
 
 void mem_init(void)
 {
     uint64_t mem_size;
 
     mem_size = platform_mem_size();
-    heap_start = (platform_kernel_end() + PAGE_SIZE - 1) & PAGE_MASK;
+    heap_start = (platform_heap_start() + PAGE_SIZE - 1) & PAGE_MASK;
     heap_top = heap_start;
+    heap_max = heap_start + mem_size;
 
     /*
      * Cowardly refuse to run with less than 512KB of free memory.
      */
-    if (heap_start + 0x80000 > mem_size)
+    if (0x80000 > mem_size)
 	PANIC("Not enough memory");
-
-    /*
-     * If we have <1MB of free memory then don't let the heap grow to more than
-     * roughly half of free memory, otherwise don't let it grow to within 1MB
-     * of the stack.
-     * TODO: Use guard pages here instead?
-     */
-    stack_guard_size = (mem_size - heap_start >= 0x100000) ?
-	0x100000 : ((mem_size - heap_start) / 2);
 }
 
 /*
@@ -54,10 +46,6 @@ void mem_init(void)
 void *sbrk(intptr_t increment)
 {
     uint64_t prev, brk;
-    /*
-     * Heap is limited by the stack (currently at &prev).
-     */
-    uint64_t heap_max = (uint64_t)&prev - stack_guard_size;
     prev = brk = heap_top;
 
     /*

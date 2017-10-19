@@ -90,15 +90,11 @@ void ukvm_hv_vcpu_init(struct ukvm_hv *hv, ukvm_gpa_t gpa_ep,
                        ukvm_gpa_t gpa_kend, char **cmdline)
 {
     struct ukvm_boot_info *bi = malloc(sizeof(struct ukvm_boot_info));
-    bi->kernel_end = gpa_kend;
-
     /*
-     * In hv_linux, mem_size is interpreted as heap_size, and kend points to
-     * the start of the heap. bi->mem_size is used by the unikernel as the
-     * address of the last byte, not as actual size so we add kend+mem_size
-     * here.
+     * In hv_linux, mem_size is interpreted as heap_size.
      */
-    bi->mem_size = gpa_kend + hv->mem_size;
+    bi->heap_start = (uint64_t)malloc(hv->mem_size);
+    bi->mem_size = hv->mem_size;
     bi->cmdline = (uint64_t)malloc(UKVM_CMDLINE_SIZE);
     bi->cpu.tsc_freq =   get_cpuinfo_freq();
     bi->hypercall_ptr = (uint64_t)ukvm_hv_handle_exit;

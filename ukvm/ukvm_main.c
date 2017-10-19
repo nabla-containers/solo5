@@ -116,7 +116,7 @@ static void usage(const char *prog)
 int main(int argc, char **argv)
 {
     size_t mem_size = 0x20000000;
-    ukvm_gpa_t gpa_ep, gpa_kend;
+    ukvm_gpa_t gpa_ep, gpa_kend = 0;
     const char *prog;
     const char *elffile;
     int matched;
@@ -170,8 +170,6 @@ int main(int argc, char **argv)
     struct ukvm_hv *hv = ukvm_hv_init(mem_size);
 
 #ifdef __UKVM_LINUX__
-    /* The heap in ukvm kernels starts right after kernel_end. */
-    gpa_kend = (uint64_t)malloc(hv->mem_size);
     ukvm_dynamic_load(elffile, &gpa_ep);
 #else
     ukvm_elf_load(elffile, hv->mem, hv->mem_size, &gpa_ep, &gpa_kend);

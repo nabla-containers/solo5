@@ -160,10 +160,10 @@ static inline void ukvm_do_hypercall(int n, volatile void *arg)
  */
 struct ukvm_boot_info {
     uint64_t mem_size;                  /* Memory size in bytes */
-    uint64_t kernel_end;                /* Address of end of kernel */
     UKVM_GUEST_PTR(char *) cmdline;     /* Address of command line (C string) */
     struct ukvm_cpu_boot_info cpu;      /* Arch-dependent part (see above) */
-    uint64_t hypercall_ptr;
+    uint64_t hypercall_ptr;             /* Pointer to the hypercall table (for unix backend) */
+    uint64_t heap_start;                /* Start of heap (for unix backend) */
 };
 /*
  * Maximum size of guest command line, including the string terminator.

@@ -26,10 +26,11 @@ static uint64_t stack_guard_size;
 
 void mem_init(void)
 {
+    extern char _stext[], _etext[], _erodata[], _end[];
     uint64_t mem_size;
 
     mem_size = platform_mem_size();
-    heap_start = (platform_kernel_end() + PAGE_SIZE - 1) & PAGE_MASK;
+    heap_start = ((uint64_t)&_end + PAGE_SIZE - 1) & PAGE_MASK;
     heap_top = heap_start;
 
     /*
