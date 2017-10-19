@@ -79,7 +79,7 @@ add_module ()
 }
 
 UKVM_CFLAGS=-rdynamic
-UKVM_LDFLAGS=
+UKVM_LDFLAGS=-static
 UKVM_LDLIBS=-ldl
 UKVM_HEADERS=
 UKVM_OBJS=
@@ -100,13 +100,14 @@ case ${TARGET} in
     x86_64-*linux*)
         #add_obj ukvm_hv_kvm.o ukvm_hv_kvm_x86_64.o ukvm_cpu_x86_64.o
         #add_header ukvm_hv_kvm.h ukvm_cpu_x86_64.h
-        add_obj ukvm_hv_linux.o 
+        add_cflags "-D__UKVM_LINUX__"
+        add_obj ukvm_hv_linux.o
         add_header ukvm_hv_linux.h 
         ;;
     x86_64-*freebsd1[12]*)
         add_obj ukvm_hv_freebsd.o ukvm_hv_freebsd_x86_64.o ukvm_cpu_x86_64.o
         add_header ukvm_hv_freebsd.h ukvm_cpu_x86_64.h
-	    ;;
+	;;
     aarch64-*linux*)
         add_obj ukvm_hv_kvm.o ukvm_hv_kvm_aarch64.o ukvm_cpu_aarch64.o
         add_header ukvm_hv_kvm.h ukvm_cpu_aarch64.h
@@ -141,7 +142,10 @@ _build-ukvm:
 _build-ukvm/ukvm_%.o: ${UKVM_SRC}/ukvm_%.c \$(MAKEFILE_LIST) | _build-ukvm
 	\$(UKVM_CC) \$(UKVM_CFLAGS) -c \$< -o \$@
 
-ukvm-bin: \$(UKVM_OBJS) \$(MAKEFILE_LIST)
+ukvm-bin: \$(UKVM_OBJS) \$(MAKEFILE_LIST) ukvm-dyn
+	\$(UKVM_CC) \$(UKVM_LDFLAGS) -o \$@ \$(UKVM_OBJS) \$(UKVM_LDLIBS)
+
+ukvm-dyn: \$(UKVM_OBJS) \$(MAKEFILE_LIST)
 	\$(UKVM_CC) \$(UKVM_LDFLAGS) -o \$@ \$(UKVM_OBJS) \$(UKVM_LDLIBS)
 
 .PHONY: ukvm-clean

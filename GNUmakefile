@@ -104,7 +104,7 @@ opam-ukvm-install: solo5-kernel-ukvm.pc ukvm
 	cp ukvm/ukvm.h $(OPAM_UKVM_INCDIR)/ukvm.h
 	mkdir -p $(OPAM_UKVM_INCDIR)/host
 	cp -R include-host/. $(OPAM_UKVM_INCDIR)/host
-	cp kernel/ukvm/solo5.o kernel/ukvm/solo5.lds $(OPAM_UKVM_LIBDIR)
+	cp kernel/unix/solo5.o $(OPAM_UKVM_LIBDIR)
 	mkdir -p $(OPAM_BINDIR)
 	mkdir -p $(OPAM_UKVM_LIBDIR)/src
 	cp -R ukvm $(OPAM_UKVM_LIBDIR)/src

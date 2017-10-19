@@ -52,9 +52,6 @@ Makefile.ukvm: $(UKVM_SRC)/ukvm-configure
 
 $(SOLO5_DIR)/ukvm/solo5.o: 
 	$(MAKE) -C $(SOLO5_DIR) ukvm
-
-$(SOLO5_DIR)/ukvm/solo5.so: 
-	$(MAKE) -C $(SOLO5_DIR) ukvm
 endif
 
 ifeq ($(BUILD_MUEN), yes)

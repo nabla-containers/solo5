@@ -16,7 +16,7 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
 # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-UKVM_TARGETS=test_fpu.ukvm test_fpu.so ukvm-bin
+UKVM_TARGETS=test_fpu.ukvm test_fpu.so ukvm-bin ukvm-dyn
 VIRTIO_TARGETS=test_fpu.virtio
 MUEN_TARGETS=test_fpu.muen
 UKVM_MODULES=

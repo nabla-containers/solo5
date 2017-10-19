@@ -9,8 +9,10 @@ tests/*/*.ukvm
 tests/*/*.virtio
 tests/*/*.muen
 tests/*/ukvm-bin
+tests/*/ukvm-dyn
 ukvm/Makefile.ukvm
 ukvm/_build_ukvm/
 ukvm/ukvm-bin
+ukvm/ukvm-dyn
 *.log
 *.so

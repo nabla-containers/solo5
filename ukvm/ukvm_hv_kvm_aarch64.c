@@ -278,7 +278,6 @@ static void aarch64_setup_core_registers(struct ukvm_hv *hv,
 
     bi = (struct ukvm_boot_info *)(hv->mem + AARCH64_BOOT_INFO);
     bi->mem_size = hv->mem_size;
-    bi->kernel_end = gpa_kend;
     bi->cmdline = AARCH64_CMDLINE_BASE;
 
     /*

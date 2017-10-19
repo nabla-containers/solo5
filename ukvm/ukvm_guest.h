@@ -33,7 +33,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#define __UKVM_LINUX__
 
 
 /*
@@ -69,13 +68,8 @@ typedef uint64_t ukvm_gpa_t;
  * On x86 the compiler-only memory barrier ("memory" clobber) is sufficient
  * across the hypercall boundary.
  */
-static inline void ukvm_do_hypercall(int n, volatile void *arg)
+inline void __ukvm_do_hypercall(int n, volatile void *arg)
 {
-#ifdef __UKVM_LINUX__
-    void (*_hc)(int,void *) = (void (*)(int, void *))ukvm_linux_hypercall_ptr;
-    _hc(n, (void *)arg);
-#else    
-
 #    ifdef assert
     assert(((uint64_t)arg <= UINT32_MAX));
 #    endif
@@ -84,7 +78,6 @@ static inline void ukvm_do_hypercall(int n, volatile void *arg)
             : "a" ((uint32_t)((uint64_t)arg)),
               "d" ((uint16_t)(UKVM_HYPERCALL_PIO_BASE + n))
             : "memory");
-#endif /*__UKVM_LINUX__*/
 }
 #    endif
 
@@ -162,10 +155,8 @@ struct ukvm_boot_info {
     uint64_t mem_size;                  /* Memory size in bytes */
     UKVM_GUEST_PTR(char *) cmdline;     /* Address of command line (C string) */
     struct ukvm_cpu_boot_info cpu;      /* Arch-dependent part (see above) */
-#ifdef __UKVM_LINUX__
     uint64_t hypercall_ptr;             /* Pointer to the exit hypercall */
     uint64_t heap_start;                /* Pointer to the start of heap */
-#endif
 };
 /*
  * Maximum size of guest command line, including the string terminator.

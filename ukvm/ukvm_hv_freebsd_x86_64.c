@@ -116,7 +116,6 @@ void ukvm_hv_vcpu_init(struct ukvm_hv *hv, ukvm_gpa_t gpa_ep,
     struct ukvm_boot_info *bi =
         (struct ukvm_boot_info *)(hv->mem + X86_BOOT_INFO_BASE);
     bi->mem_size = hv->mem_size;
-    bi->kernel_end = gpa_kend;
     bi->cmdline = X86_CMDLINE_BASE;
 
     size_t outsz = sizeof bi->cpu.tsc_freq;

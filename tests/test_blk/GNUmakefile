@@ -16,7 +16,7 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
 # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-UKVM_TARGETS=test_blk.ukvm test_blk.so ukvm-bin
+UKVM_TARGETS=test_blk.ukvm test_blk.so ukvm-bin ukvm-dyn
 VIRTIO_TARGETS=test_blk.virtio
 UKVM_MODULES=blk
 

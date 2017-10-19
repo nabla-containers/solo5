@@ -172,7 +172,7 @@ run_test ()
                     die "Don't know how to run ${NAME} on ${OS}"
                     ;;
             esac
-            UKVM=${TEST_DIR}/ukvm-bin
+            UKVM=${TEST_DIR}/ukvm-dyn
             [ -n "${DISK}" ] && UKVM="${UKVM} --disk=${DISK}"
             [ -n "${NET}" ] && UKVM="${UKVM} --net=${NET}"
             (set -x; timeout 30s ${UKVM} -- ${UNIKERNEL} "$@")

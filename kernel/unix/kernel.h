@@ -24,6 +24,8 @@
 #include "../kernel.h"
 #include "../ukvm/ukvm_guest.h"
 
+void ukvm_do_hypercall(int n, volatile void *arg);
+
 void console_init(void);
 void net_init(void);
 void mem_init(void);

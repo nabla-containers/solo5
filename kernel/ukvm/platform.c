@@ -52,7 +52,10 @@ void platform_exit(void)
     /*
      * Halt will cause an exit (as in "shutdown") on ukvm.
      */
-    //cpu_halt();
-    ukvm_do_hypercall(UKVM_HYPERCALL_HALT, NULL);
-    for(;;);
+    cpu_halt();
+}
+
+inline void ukvm_do_hypercall(int n, volatile void *arg)
+{
+    __ukvm_do_hypercall(n, arg);
 }
