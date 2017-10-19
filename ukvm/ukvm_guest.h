@@ -162,8 +162,10 @@ struct ukvm_boot_info {
     uint64_t mem_size;                  /* Memory size in bytes */
     UKVM_GUEST_PTR(char *) cmdline;     /* Address of command line (C string) */
     struct ukvm_cpu_boot_info cpu;      /* Arch-dependent part (see above) */
-    uint64_t hypercall_ptr;             /* Pointer to the hypercall table (for unix backend) */
-    uint64_t heap_start;                /* Start of heap (for unix backend) */
+#ifdef __UKVM_LINUX__
+    uint64_t hypercall_ptr;             /* Pointer to the exit hypercall */
+    uint64_t heap_start;                /* Pointer to the start of heap */
+#endif
 };
 /*
  * Maximum size of guest command line, including the string terminator.

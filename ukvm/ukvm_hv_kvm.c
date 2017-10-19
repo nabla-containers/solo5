@@ -93,3 +93,9 @@ struct ukvm_hv *ukvm_hv_init(size_t mem_size)
     hv->b = hvb;
     return hv;
 }
+
+void ukvm_hv_load(const char *file, uint8_t *mem, size_t mem_size,
+                  ukvm_gpa_t *p_entry, ukvm_gpa_t *p_end)
+{
+    ukvm_elf_load(file, hv->mem, hv->mem_size, p_entry, p_end);
+}

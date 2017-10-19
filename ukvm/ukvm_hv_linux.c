@@ -150,3 +150,9 @@ static void ukvm_hv_handle_exit(int nr, void *arg)
     ukvm_gpa_t gpa = (ukvm_gpa_t)arg;
     fn(hv, gpa);
 }
+
+void ukvm_hv_load(struct ukvm_hv *hv, const char *file,
+                  ukvm_gpa_t *p_entry, ukvm_gpa_t *p_end)
+{
+    ukvm_dynamic_load(file, p_entry);
+}

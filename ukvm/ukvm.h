@@ -110,6 +110,13 @@ void ukvm_hv_vcpu_init(struct ukvm_hv *hv, ukvm_gpa_t gpa_ep,
 void ukvm_hv_vcpu_loop(struct ukvm_hv *hv);
 
 /*
+ * Load a unikernel binary from (file). It will return the entry point (p_entry)
+ * and, if applicable, will return the last byte used by the binary (p_end).
+ */
+void ukvm_hv_load(struct ukvm_hv *hv, const char *file,
+                  ukvm_gpa_t *p_entry, ukvm_gpa_t *p_end);
+
+/*
  * Register the file descriptor (fd) for use with UKVM_HYPERCALL_POLL.
  */
 int ukvm_core_register_pollfd(int fd);
