@@ -38,14 +38,18 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include "ukvm.h"
+
+#define MINIMAL_OFFSET	0x100000
 
 static ssize_t pread_in_full(int fd, void *buf, size_t count, off_t offset)
 {
     ssize_t total = 0;
     char *p = buf;
 
+    printf("p=%p count=%lx offset=%lx\n", p, count, offset);
     if (count > SSIZE_MAX) {
         errno = E2BIG;
         return -1;
@@ -54,7 +58,14 @@ static ssize_t pread_in_full(int fd, void *buf, size_t count, off_t offset)
     while (count > 0) {
         ssize_t nr;
 
+	if (buf == NULL) {
+		p += MINIMAL_OFFSET;
+		offset += MINIMAL_OFFSET;
+		count -= MINIMAL_OFFSET;
+	}
+	//printf("\tnr=-- p=%p count=%lx offset=%lx\n", p, count, offset);
         nr = pread(fd, p, count, offset);
+	printf("\tnr=%lu p=%p count=%lx offset=%lx\n", nr, p, count, offset);
         if (nr == 0)
             return total;
         else if (nr == -1 && errno == EINTR)
@@ -68,6 +79,8 @@ static ssize_t pread_in_full(int fd, void *buf, size_t count, off_t offset)
         offset += nr;
     }
 
+    if (buf == NULL)
+        total += MINIMAL_OFFSET;
     return total;
 }
 
@@ -107,13 +120,13 @@ void ukvm_elf_load(const char *file, uint8_t *mem, size_t mem_size,
 
     fd_kernel = open(file, O_RDONLY);
     if (fd_kernel == -1)
-        goto out_error;
+        err(1, "%s can't open kernel", file);
 
     numb = pread_in_full(fd_kernel, &hdr, sizeof(Elf64_Ehdr), 0);
     if (numb < 0)
-        goto out_error;
+        err(1, "%s failed pread", file);
     if (numb != sizeof(Elf64_Ehdr))
-        goto out_invalid;
+    	errx(1, "%s: failed pread", file);
 
     /*
      * Validate program is in ELF64 format:
@@ -136,7 +149,7 @@ void ukvm_elf_load(const char *file, uint8_t *mem, size_t mem_size,
 #error Unsupported target
 #endif
         )
-        goto out_invalid;
+   	errx(1, "%s: bad header entry", file);
 
     ph_off = hdr.e_phoff;
     ph_entsz = hdr.e_phentsize;
@@ -145,12 +158,12 @@ void ukvm_elf_load(const char *file, uint8_t *mem, size_t mem_size,
 
     phdr = malloc(buflen);
     if (!phdr)
-        goto out_error;
+        err(1, "%s failed malloc", file);
     numb = pread_in_full(fd_kernel, phdr, buflen, ph_off);
     if (numb < 0)
-        goto out_error;
+        err(1, "%s failed pread", file);
     if (numb != buflen)
-        goto out_invalid;
+    	errx(1, "%s: incomplete pread 1", file);
 
     /*
      * Load all segments with the LOAD directive from the elf file at offset
@@ -174,16 +187,16 @@ void ukvm_elf_load(const char *file, uint8_t *mem, size_t mem_size,
 
         if ((paddr >= mem_size) || add_overflow(paddr, filesz, result)
                 || (result >= mem_size))
-            goto out_invalid;
+    	    errx(1, "%s: paddr >= mem_size", file);
         if (add_overflow(paddr, memsz, result) || (result >= mem_size))
-            goto out_invalid;
+    	    errx(1, "%s: paddr >= mem_size", file);
         /*
          * Verify that align is a non-zero power of 2 and safely compute
          * ((_end + (align - 1)) & -align).
          */
         if (align > 0 && (align & (align - 1)) == 0) {
             if (add_overflow(result, (align - 1), _end))
-                goto out_invalid;
+    	        errx(1, "%s: not aligned", file);
             _end = _end & -align;
         }
         else {
@@ -195,9 +208,9 @@ void ukvm_elf_load(const char *file, uint8_t *mem, size_t mem_size,
         daddr = mem + paddr;
         numb = pread_in_full(fd_kernel, daddr, filesz, offset);
         if (numb < 0)
-            goto out_error;
+            err(1, "%s failed pread", file);
         if (numb != filesz)
-            goto out_invalid;
+    	    errx(1, "%s: incomplete pread 2", file);
         memset(daddr + filesz, 0, memsz - filesz);
 
         prot = PROT_NONE;
@@ -210,18 +223,18 @@ void ukvm_elf_load(const char *file, uint8_t *mem, size_t mem_size,
         if (prot & PROT_WRITE && prot & PROT_EXEC)
             warnx("%s: Warning: phdr[%u] requests WRITE and EXEC permissions",
                   file, ph_i);
-        if (mprotect(daddr, _end - paddr, prot) == -1)
-            goto out_error;
+        if (daddr == NULL) {
+            if (mprotect(daddr + MINIMAL_OFFSET, _end - paddr - MINIMAL_OFFSET, prot) == -1)
+    	        err(1, "%s can't mprotect", file);
+        } else {
+            if (mprotect(daddr, _end - paddr, prot) == -1)
+                err(1, "%s can't mprotect", file);
+        }
     }
 
     free (phdr);
     close (fd_kernel);
     *p_entry = hdr.e_entry;
+    printf("done loading elf\n");
     return;
-
-out_error:
-    err(1, "%s", file);
-
-out_invalid:
-    errx(1, "%s: Exec format error", file);
 }
