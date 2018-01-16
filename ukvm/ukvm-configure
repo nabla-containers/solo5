@@ -86,7 +86,7 @@ add_module ()
 }
 
 UKVM_CFLAGS=
-UKVM_LDFLAGS="-T ${UKVM_SRC}/ukvm.lds"
+UKVM_LDFLAGS="-T ${UKVM_SRC}/ukvm.lds -z execstack"
 UKVM_LDLIBS=
 UKVM_HEADERS=
 UKVM_OBJS=
