@@ -39,7 +39,7 @@
 #include "ukvm.h"
 #include "ukvm_hv_linux.h"
 
-static void install_syscall_filter(void)
+void install_syscall_filter(void)
 {
     scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL);
 
@@ -80,13 +80,9 @@ static void install_syscall_filter(void)
      *  to point to the actual pollfd struct which will be in core,
      *  not net.  For now, just saying that polling with nfds=1 is OK.
      */
-    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(read), 2,
-                     SCMP_A0(SCMP_CMP_EQ, 3),
-                     SCMP_A2(SCMP_CMP_EQ, 1526));
-    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1,
-                     SCMP_A0(SCMP_CMP_EQ, 3));
-    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(ppoll), 1,
-                     SCMP_A1(SCMP_CMP_EQ, 1));
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(read), 0);
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 0);
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(ppoll), 0);
 
     
     seccomp_load(ctx);
