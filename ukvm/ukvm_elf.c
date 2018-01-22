@@ -49,7 +49,6 @@ static ssize_t pread_in_full(int fd, void *buf, size_t count, off_t offset)
     ssize_t total = 0;
     char *p = buf;
 
-    printf("p=%p count=%lx offset=%lx\n", p, count, offset);
     if (count > SSIZE_MAX) {
         errno = E2BIG;
         return -1;
@@ -63,9 +62,7 @@ static ssize_t pread_in_full(int fd, void *buf, size_t count, off_t offset)
 		offset += MINIMAL_OFFSET;
 		count -= MINIMAL_OFFSET;
 	}
-	//printf("\tnr=-- p=%p count=%lx offset=%lx\n", p, count, offset);
         nr = pread(fd, p, count, offset);
-	printf("\tnr=%lu p=%p count=%lx offset=%lx\n", nr, p, count, offset);
         if (nr == 0)
             return total;
         else if (nr == -1 && errno == EINTR)
@@ -235,6 +232,5 @@ void ukvm_elf_load(const char *file, uint8_t *mem, size_t mem_size,
     free (phdr);
     close (fd_kernel);
     *p_entry = hdr.e_entry;
-    printf("done loading elf\n");
     return;
 }
