@@ -11,6 +11,7 @@
  */
 #include "syscall-reporter.h"
 #include "syscall-names.h"
+#include <err.h>
 
 const char * const msg_needed = "Looks like you also need syscall: ";
 
@@ -72,5 +73,14 @@ int install_syscall_reporter(void)
 		perror("sigprocmask");
 		return -1;
 	}
+
+	struct sigaction sa;
+	memset (&sa, 0, sizeof (struct sigaction));
+	sigfillset(&sa.sa_mask);
+	if (sigaction(SIGINT, &sa, NULL) == -1)
+		err(1, "Could not install signal handler");
+	if (sigaction(SIGTERM, &sa, NULL) == -1)
+		err(1, "Could not install signal handler");
+
 	return 0;
 }
