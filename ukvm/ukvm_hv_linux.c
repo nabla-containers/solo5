@@ -201,11 +201,21 @@ void ukvm_hv_vcpu_loop(struct ukvm_hv *hv)
     install_syscall_filter();
     /* prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT); */
 
+#ifdef UKVM_MODULE_FTRACE    
+    void ukvm_ftrace_ready(void);
+    ukvm_ftrace_ready();
+#endif
+
     /* 
      * First call into unikernel, call start.  Note we are sharing our
      * stack with the unikernel. 
      */
     _start(hv->b->arg);
+
+#ifdef UKVM_MODULE_FTRACE    
+    void ukvm_ftrace_finished(void);
+    ukvm_ftrace_finished();
+#endif
 }
 
 /* Called directly by the unikernel. */
