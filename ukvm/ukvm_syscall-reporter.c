@@ -55,6 +55,11 @@ static void reporter(int nr, siginfo_t *info, void *void_context)
 	_exit(1);
 }
 
+static void sig_handler(int signo)
+{
+	exit(1);
+}
+
 int install_syscall_reporter(void)
 {
 	struct sigaction act;
@@ -74,8 +79,14 @@ int install_syscall_reporter(void)
 		return -1;
 	}
 
+	/*
+	 * Our current sig handler in ukvm_main.c is doing some bad system
+	 * call; let's replace it with this simpler sig_handler that only
+	 * exits(1).
+	 */
 	struct sigaction sa;
 	memset (&sa, 0, sizeof (struct sigaction));
+	sa.sa_handler = sig_handler;
 	sigfillset(&sa.sa_mask);
 	if (sigaction(SIGINT, &sa, NULL) == -1)
 		err(1, "Could not install signal handler");
