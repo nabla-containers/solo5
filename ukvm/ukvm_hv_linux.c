@@ -39,11 +39,16 @@
 #include <seccomp.h> /* from libseccomp-dev */
 #include "seccomp-bpf.h"
 #include "syscall-reporter.h"
+#include "ukvm_cpu_x86_64.h"
 /* #include <sys/prctl.h> */
 /* #include <linux/seccomp.h> */
 
 #include "ukvm.h"
 #include "ukvm_hv_linux.h"
+
+void ukvm_hv_mem_size(size_t *mem_size) {
+    ukvm_x86_mem_size(mem_size);
+}
 
 void install_syscall_filter(void)
 {
@@ -192,7 +197,7 @@ void ukvm_hv_vcpu_init(struct ukvm_hv *hv, ukvm_gpa_t gpa_ep,
  */
 static struct ukvm_hv *loop_hv;
 
-void ukvm_hv_vcpu_loop(struct ukvm_hv *hv)
+int ukvm_hv_vcpu_loop(struct ukvm_hv *hv)
 {
     void (*_start)(void *) = (void (*)(void *))hv->b->entry;
     loop_hv = hv;
@@ -216,6 +221,8 @@ void ukvm_hv_vcpu_loop(struct ukvm_hv *hv)
     void ukvm_ftrace_finished(void);
     ukvm_ftrace_finished();
 #endif
+
+    return 0;
 }
 
 /* Called directly by the unikernel. */
@@ -223,9 +230,13 @@ static void ukvm_hv_handle_exit(int nr, void *arg)
 {
     struct ukvm_hv *hv = loop_hv;
 
-    /* Guest has halted the CPU, this is considered as a normal exit. */
-    if (nr == UKVM_HYPERCALL_HALT)
-        exit(0);
+    /* Guest has halted the CPU. */
+    if (nr == UKVM_HYPERCALL_HALT) {
+        ukvm_gpa_t gpa = (ukvm_gpa_t)arg;
+        struct ukvm_halt *p = 
+            UKVM_CHECKED_GPA_P(hv, gpa, sizeof (struct ukvm_halt));
+        exit(p->exit_status);
+    }
 
     int handled = 0;
     for (ukvm_vmexit_fn_t *fn = ukvm_core_vmexits; *fn && !handled; fn++)

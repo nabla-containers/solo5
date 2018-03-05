@@ -107,7 +107,7 @@ case ${TARGET} in
     x86_64-*linux*)
         #add_obj ukvm_hv_kvm.o ukvm_hv_kvm_x86_64.o ukvm_cpu_x86_64.o
         #add_header ukvm_hv_kvm.h ukvm_cpu_x86_64.h
-        add_obj ukvm_hv_linux.o ukvm_syscall-reporter.o
+        add_obj ukvm_hv_linux.o ukvm_syscall-reporter.o ukvm_cpu_x86_64.o
         add_header ukvm_hv_linux.h seccomp-bpf.h
         add_ldlib -lseccomp
         ;;
