@@ -134,7 +134,7 @@ cat <<EOF> Makefile.ukvm
 all: ukvm-bin
 
 UKVM_CC=${UKVM_CC}
-UKVM_CFLAGS=-Wall -Werror -std=c99 -O2 -g ${UKVM_CFLAGS}
+UKVM_CFLAGS=-Wall -Werror -std=c99 -O2 -ggdb ${UKVM_CFLAGS}
 UKVM_LDFLAGS=${UKVM_LDFLAGS}
 UKVM_LDLIBS=${UKVM_LDLIBS}
 

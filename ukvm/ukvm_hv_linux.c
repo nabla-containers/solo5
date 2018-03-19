@@ -118,12 +118,14 @@ struct ukvm_hv *ukvm_hv_init(size_t mem_size)
         err(1, "malloc");
     memset(hvb, 0, sizeof (struct ukvm_hvb));
 
-    hvb->realmem = mmap((void *)LINUX_MAP_ADDRESS,
-                        mem_size - LINUX_MAP_ADDRESS, PROT_READ | PROT_WRITE,
+    // 0x100000 is the ELF minimal offset location
+    hvb->realmem = mmap((void *)LINUX_MAP_ADDRESS, 0x100000 - LINUX_MAP_ADDRESS,
+                        PROT_READ | PROT_WRITE,
                         MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     if (hvb->realmem == MAP_FAILED)
         err(1, "Error allocating guest memory");
 
+    hvb->realmem = (void *)LINUX_MAP_ADDRESS;
     assert((uint64_t)hvb->realmem == LINUX_MAP_ADDRESS);
 
     /*
