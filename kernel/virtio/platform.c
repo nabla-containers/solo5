@@ -20,7 +20,7 @@
 
 #include "kernel.h"
 
-static char cmdline[8192];
+static char cmdline[131072];
 
 #define PLATFORM_MEM_START 0x100000
 #define PLATFORM_MAX_MEM_SIZE 0x40000000

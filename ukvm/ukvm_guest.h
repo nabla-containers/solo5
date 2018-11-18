@@ -163,7 +163,7 @@ struct ukvm_boot_info {
 /*
  * Maximum size of guest command line, including the string terminator.
  */
-#define UKVM_CMDLINE_SIZE 8192
+#define UKVM_CMDLINE_SIZE 131072
 
 /*
  * Canonical list of hypercalls supported by all monitor modules. Actual calls
