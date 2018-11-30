@@ -148,7 +148,8 @@ run_test ()
             OS="$(uname -s)"
             case ${OS} in
                 Linux)
-                    [ -c /dev/kvm -a -w /dev/kvm ] || exit 98
+                    # not needed for seccomp backend
+                    # [ -c /dev/kvm -a -w /dev/kvm ] || exit 98
                     ;;
                 FreeBSD)
                     # TODO, just try and run the test anyway
